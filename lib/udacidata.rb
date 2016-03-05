@@ -76,15 +76,27 @@ class Udacidata
      end
   end
 
-  def destroy
+  # Return the destroyed product
+  #
+  # Params:
+  #  +id+:: Id of the product
+  def self.destroy(id)
+    all             = self.all
+    destroy_product = self.find(id)
+    all             = all.delete_if { |product| product.id == destroy_product.id }
+    CSV.open(@@CSV_FILE, "wb") do |csv|
+      csv << ["id", "brand", "product", "price"]
+        all.each do |product|
+        csv << [product.id, product.brand, product.name, product.price]
+      end
+    end
+    destroy_product
+  end
+
+  def find_by
   end
 
   def update
-  end
-
-
-
-  def find_by
   end
 
   def where
