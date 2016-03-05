@@ -31,6 +31,7 @@ class Udacidata
     product
   end
 
+  # Return all the products
   def self.all
     products = []
     CSV.foreach(@@CSV_FILE, {:headers=>:first_row}) do |row|
@@ -40,12 +41,39 @@ class Udacidata
     products
   end
 
+  # Return the n first products.
+  # Can be a single product or
+  # an array of products
+  #
+  # Params:
+  #  +n+:: the number of product
   def self.first(n=0)
     list = self.all[0..n-1]
     n == 0 ? list[0] : list
   end
 
-  def last(n=0)
+
+  # Return the n first products.
+  # Can be a single product or
+  # an array of products
+  #
+  # Params:
+  #  +n+:: the number of product
+  def self.last(n=0)
+    all   = self.all
+    return all[-1] if n == 0
+    index = all.size - n
+    list  = all[index..-1]
+  end
+
+  # Return a specific product
+  #
+  # Params:
+  #  +id+:: Id of the product
+  def self.find(id)
+     self.all.detect do |product|
+        product.id == id
+     end
   end
 
   def destroy
@@ -54,8 +82,7 @@ class Udacidata
   def update
   end
 
-  def find
-  end
+
 
   def find_by
   end
