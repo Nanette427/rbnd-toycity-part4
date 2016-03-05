@@ -34,13 +34,15 @@ class Udacidata
   def self.all
     products = []
     CSV.foreach(@@CSV_FILE, {:headers=>:first_row}) do |row|
-      (brand, name, price) = row
-      products << self.new(brand: brand, name: name, price: price)
+      (id, brand, name, price) = row["id"], row["brand"], row["product"], row["price"]
+      products << self.new(id: id, brand: brand, name: name, price: price)
     end
     products
   end
 
   def self.first(n=0)
+    list = self.all[0..n-1]
+    n == 0 ? list[0] : list
   end
 
   def last(n=0)
