@@ -83,7 +83,7 @@ class Udacidata
   def self.destroy(id)
     all             = self.all
     destroy_product = self.find(id)
-    all             = all.delete_if { |product| product.id == destroy_product.id }
+    all.reject! { |product| product.id == destroy_product.id }
     CSV.open(@@CSV_FILE, "wb") do |csv|
       csv << ["id", "brand", "product", "price"]
         all.each do |product|
@@ -93,12 +93,69 @@ class Udacidata
     destroy_product
   end
 
-  def find_by
+  # Redefine method_missing to implement all
+  # the find_by method.
+  #
+  # Params:
+  #  +method_name+::the method_name
+  #  +arguments+:: extra aurguments in
+  #  case of `find_by` method, this will be the
+  # value we search.
+  def self.method_missing(method_name, *arguments)
+    if method_name =~ /^find_by_(.*)$/
+      key   = $1.to_sym
+      value = arguments[0]
+      self.all.each do |product|
+        next if product.send(key) != value
+        return product
+      end
+    else
+      super
+    end
   end
 
-  def update
+  # Return an Array of product
+  # that respond to the selection
+  #
+  # Params:
+  #  +options+:: hash of constraint
+  def self.where(options={})
+    selection = []
+    should_respond_to_count = options.length
+
+    self.all.each do |product|
+      respond_to_count = 0
+      # Consider that we can select on multiple field
+      options.each do |key,value|
+        respond_to_count += 1 if product.send(key) == value
+      end
+      selection << product if should_respond_to_count == respond_to_count
+    end
+
+    selection
   end
 
-  def where
+  # Update an entry in the database
+  #
+  # Params:
+  #  +options+:: hash of field to update
+  def update(options={})
+    # Update the product
+    options.each do |key,value|
+      self.send("#{key}=", value) if self.respond_to?(key)
+    end
+
+    # Update the database
+    all = Product.all
+    CSV.open(@@CSV_FILE, "wb") do |csv|
+      csv << ["id", "brand", "product", "price"]
+        all.each do |product|
+        product     = self if product.id == self.id
+        csv << [product.id, product.brand, product.name, product.price]
+      end
+    end
+
+    return self
   end
+
 end
