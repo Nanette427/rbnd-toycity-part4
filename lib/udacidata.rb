@@ -71,9 +71,16 @@ class Udacidata
   # Params:
   #  +id+:: Id of the product
   def self.find(id)
-     self.all.detect do |product|
+    begin
+      find_product = self.all.detect do |product|
         product.id == id
-     end
+      end
+      raise ProductNotFoundErrors, "product with id #{id} not found." if !find_product
+      return find_product
+    rescue StandardError => e
+      puts "#{e.class}: #{e.message}"
+    end
+
   end
 
   # Return the destroyed product
@@ -83,6 +90,7 @@ class Udacidata
   def self.destroy(id)
     all             = self.all
     destroy_product = self.find(id)
+    return if !destroy_product
     all.reject! { |product| product.id == destroy_product.id }
     CSV.open(@@CSV_FILE, "wb") do |csv|
       csv << ["id", "brand", "product", "price"]
@@ -103,12 +111,7 @@ class Udacidata
   # value we search.
   def self.method_missing(method_name, *arguments)
     if method_name =~ /^find_by_(.*)$/
-      key   = $1.to_sym
-      value = arguments[0]
-      self.all.each do |product|
-        next if product.send(key) != value
-        return product
-      end
+      Module::create_finder_methods($1,arguments[0])
     else
       super
     end
